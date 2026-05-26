@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Employee ROI Calculator | CerebraTech</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-dark: #062033;
+  --bg-darker: #0b2942;
+  --blue: #2563eb;
+  --green: #5aa06c;
+  --green-light: #49d17d;
+  --text-muted: #64748b;
+  --text-dark: #0b2942;
+  --border: #e5e7eb;
+  --bg-light: #f8fafc;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.16);
+  --shadow-card: 0 14px 40px rgba(0,0,0,0.20);
+  --ring: 0 0 0 4px rgba(37,99,235,0.16);
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  background:
+    radial-gradient(900px 520px at 25% 5%, rgba(37,99,235,0.18), transparent 55%),
+    radial-gradient(740px 520px at 80% 15%, rgba(73,209,125,0.12), transparent 60%),
+    linear-gradient(180deg, #062033 0%, #041927 100%);
+  color: #fff;
+  min-height: 100vh;
+}
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.08) 0, transparent 55%),
+    radial-gradient(1px 1px at 60% 30%, rgba(255,255,255,0.06) 0, transparent 55%),
+    radial-gradient(1px 1px at 35% 70%, rgba(255,255,255,0.05) 0, transparent 55%),
+    radial-gradient(1px 1px at 85% 75%, rgba(255,255,255,0.05) 0, transparent 55%);
+  opacity: 0.55;
+}
+
+/* Header */
+.calc-header {
+  text-align: center;
+  padding: 40px 20px 20px;
+}
+.calc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.16);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.92);
+}
+.calc-pill svg { flex-shrink: 0; }
+.calc-title {
+  margin: 16px 0 6px;
+  font-size: clamp(26px, 3.2vw, 36px);
+  line-height: 1.15;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+}
+.calc-subtitle {
+  color: rgba(255,255,255,0.65);
+  font-size: clamp(13px, 1.5vw, 15px);
+  font-weight: 600;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* Layout */
+.calc-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 18px 20px 64px;
+}
+.calc-grid {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .calc-grid { grid-template-columns: 1fr; }
+}
+
+/* Left Card - Step Wizard */
+.calc-leftCard {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  border: 1px solid rgba(15,23,42,0.08);
+  box-shadow: var(--shadow-soft);
+  color: var(--text-dark);
+}
+
+/* Step Rail */
+.calc-stepRail {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin: 4px 2px 10px;
+}
+.calc-stepRail .seg {
+  height: 4px;
+  border-radius: 999px;
+  background: #dbeafe;
+  transition: background 0.3s;
+}
+.calc-stepRail .seg.active { background: var(--blue); }
+
+.calc-stepMeta {
+  display: flex;
+  justify-content: flex-start;
+  margin: 0 2px 12px;
+}
+.calc-stepText {
+  font-size: 12px;
+  font-weight: 900;
+  color: #475569;
+}
+
+.calc-stepBody {
+  padding: 2px;
+  min-height: 260px;
+}
+
+.calc-sectionTitle {
+  font-size: 22px;
+  font-weight: 950;
+  color: var(--text-dark);
+  margin: 0 0 6px;
+}
+.calc-sectionDesc {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.calc-box {
+  background: var(--bg-light);
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  padding: 14px;
+}
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.calc-bigVal {
+  font-size: 30px;
+  font-weight: 950;
+  color: var(--text-dark);
+}
+
+/* Range Slider */
+.calc-range {
+  width: 100%;
+  margin-top: 12px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: #dbeafe;
+  outline: none;
+}
+.calc-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--blue);
+  cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.calc-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--blue);
+  cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Chips */
+.calc-btnGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+.calc-chip {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-weight: 900;
+  color: #334155;
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.calc-chip:hover { border-color: var(--blue); }
+.calc-chip.active {
+  background: var(--bg-darker);
+  color: #fff;
+  border-color: var(--bg-darker);
+}
+
+/* Option buttons */
+.calc-btnList { display: grid; gap: 10px; }
+.calc-option {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-weight: 900;
+  color: var(--bg-darker);
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+.calc-option:hover { border-color: var(--blue); }
+.calc-option.active {
+  background: var(--bg-darker);
+  color: #fff;
+  border-color: var(--bg-darker);
+}
+
+/* Number input */
+.calc-numInput {
+  flex: 1;
+  font-size: 26px;
+  font-weight: 950;
+  color: var(--text-dark);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  outline: none;
+  width: 100%;
+}
+.calc-numInput:focus { border-color: var(--blue); }
+
+/* Nav buttons */
+.calc-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.calc-linkBtn {
+  background: transparent;
+  border: 0;
+  padding: 10px 0;
+  font-weight: 900;
+  color: var(--bg-darker);
+  cursor: pointer;
+  font-size: 14px;
+}
+.calc-linkBtn:hover { color: var(--blue); }
+.calc-primaryBtn {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 950;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0 10px 22px rgba(37,99,235,0.25);
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+.calc-primaryBtn:hover { transform: translateY(-1px); filter: brightness(1.03); box-shadow: 0 12px 26px rgba(37,99,235,0.30); }
+.calc-primaryBtn:active { transform: translateY(0px); filter: brightness(0.99); }
+.calc-primaryBtn:focus-visible { outline: none; box-shadow: 0 12px 26px rgba(37,99,235,0.30), var(--ring); }
+.calc-linkBtn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 10px; padding: 10px 10px; margin-left: -10px; }
+.calc-doneText {
+  background: transparent;
+  border: 0;
+  padding: 10px 0;
+  font-weight: 900;
+  color: #94a3b8;
+  cursor: default;
+  font-size: 14px;
+}
+
+/* Scenario rows (step 6) */
+.calc-scenarioList { display: grid; gap: 10px; margin: 10px 0 14px; }
+.calc-scenarioRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+.calc-sIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.calc-sIcon.yellow { background: #fef3c7; color: #b45309; }
+.calc-sIcon.purple { background: #ede9fe; color: #6d28d9; }
+.calc-sIcon.green { background: #dcfce7; color: #15803d; }
+.calc-sText { font-size: 13px; font-weight: 850; color: var(--text-dark); }
+.calc-sText b { font-weight: 950; }
+
+.calc-inputsTitle {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.calc-inputsGrid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 22px;
+}
+.calc-inputLabel { color: var(--text-muted); font-weight: 800; font-size: 13px; }
+.calc-inputVal { color: var(--text-dark); font-weight: 950; font-size: 18px; margin-top: 2px; }
+
+/* Right Column */
+.calc-rightCol { display: flex; flex-direction: column; gap: 14px; }
+
+/* Lift Card */
+.calc-liftCard {
+  background:
+    radial-gradient(820px 420px at 15% 20%, rgba(37,99,235,0.22), transparent 58%),
+    radial-gradient(760px 420px at 85% 10%, rgba(73,209,125,0.14), transparent 60%),
+    linear-gradient(135deg, var(--bg-darker), var(--bg-dark));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  color: #fff;
+  box-shadow: var(--shadow-card);
+}
+.calc-liftKicker {
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 10px;
+}
+.calc-liftLine {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.calc-liftAmount {
+  font-size: clamp(44px, 4.6vw, 64px);
+  font-weight: 950;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.calc-liftLocked { color: rgba(255,255,255,0.18); }
+.calc-gainWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green-light);
+  font-weight: 950;
+  font-size: 22px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.calc-liftDivider {
+  height: 1px;
+  background: rgba(255,255,255,0.12);
+  margin: 18px 0;
+}
+.calc-liftBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.calc-hoursBox { display: flex; align-items: center; gap: 12px; }
+.calc-hoursIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(245,158,11,0.95);
+  flex-shrink: 0;
+}
+.calc-hoursNum { font-size: 28px; font-weight: 950; line-height: 1.05; }
+.calc-hoursLbl {
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+.calc-saveBtn {
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 22px;
+  font-weight: 950;
+  cursor: pointer;
+  background: linear-gradient(180deg, #5fd484 0%, #3aa663 100%);
+  color: #fff;
+  min-width: 190px;
+  text-align: center;
+  font-size: 15px;
+  box-shadow: 0 10px 22px rgba(73,209,125,0.18);
+  transition: transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+.calc-saveBtn:hover { transform: translateY(-1px); filter: brightness(1.02); box-shadow: 0 12px 26px rgba(73,209,125,0.22); }
+.calc-saveBtn:active { transform: translateY(0px); }
+.calc-saveBtn:focus-visible { outline: none; box-shadow: 0 12px 26px rgba(73,209,125,0.22), var(--ring); }
+.calc-saveBtn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* Compare Card */
+.calc-compareCard {
+  background:
+    radial-gradient(820px 420px at 12% 10%, rgba(255,255,255,0.06), transparent 60%),
+    linear-gradient(135deg, rgba(11,41,66,0.85), rgba(6,32,51,0.85));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px 16px;
+  color: #fff;
+}
+.calc-compareTitle {
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 12px;
+}
+.calc-barRow {
+  display: grid;
+  grid-template-columns: 70px 1fr 100px;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0;
+}
+.calc-barLbl { font-size: 12px; font-weight: 950; color: rgba(255,255,255,0.75); }
+.calc-barTrack {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  overflow: hidden;
+}
+.calc-barFill {
+  height: 100%;
+  width: 0%;
+  background: #94a3b8;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+.calc-barFillGreen { background: var(--green); }
+.calc-barVal { font-size: 12px; font-weight: 950; text-align: right; }
+
+/* Breakdown */
+.calc-subCard {
+  margin-top: 14px;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  color: var(--text-dark);
+}
+.calc-subCardInfo { border-left: 4px solid var(--blue); }
+.calc-subTitle { font-size: 14px; font-weight: 950; color: var(--text-dark); margin-bottom: 12px; }
+.calc-breakRow {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid #f1f5f9;
+}
+.calc-breakRow:first-of-type { border-top: 0; }
+.calc-icSquare {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.calc-breakTitle { font-size: 13px; font-weight: 950; color: var(--text-dark); }
+.calc-breakDesc { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+.calc-breakVal { font-size: 13px; font-weight: 950; color: #16a34a; }
+
+/* Insights */
+.calc-insightRow { display: flex; gap: 10px; align-items: flex-start; }
+.calc-icInfo {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.calc-insightText { font-size: 13px; color: var(--text-dark); line-height: 1.5; font-weight: 700; }
+.calc-insightText b { font-weight: 950; }
+
+/* Modal */
+.calc-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 99999;
+}
+.calc-modalBox {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 24px;
+  color: var(--text-dark);
+}
+.calc-modalTitle { font-size: 18px; font-weight: 950; color: var(--text-dark); }
+.calc-modalText { margin: 6px 0 14px; color: var(--text-muted); font-size: 13px; font-weight: 650; }
+.calc-formMount {
+  width: 100%;
+  min-height: 80px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.calc-modalBtns { display: flex; justify-content: flex-end; margin-top: 12px; }
+.calc-ghostBtn {
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 950;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  color: var(--bg-darker);
+  font-size: 14px;
+}
+
+/* Success modal */
+.calc-successOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 999999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.calc-successBox {
+  width: 90%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+  padding: 28px 24px;
+  text-align: center;
+  color: var(--text-dark);
+}
+.calc-successTitle { font-size: 20px; font-weight: 950; margin-bottom: 10px; }
+.calc-successMsg { font-size: 14px; line-height: 1.5; color: var(--text-muted); font-weight: 600; }
+.calc-successBtn {
+  border: 0;
+  background: var(--bg-darker);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-top: 18px;
+}
+
+/* Utility */
+.hidden { display: none !important; }
+
+/* Email gate (locks calculator until email provided) */
+.calc-gateOverlay{
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.calc-gateBox{
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+  padding: 26px 22px;
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+}
+.calc-gateTitle{ font-size: 20px; font-weight: 950; }
+.calc-gateText{ margin: 8px 0 14px; color: var(--text-muted); font-size: 13px; font-weight: 650; line-height: 1.5; }
+.calc-gateField{ display: grid; gap: 8px; }
+.calc-gateInput{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 650;
+  outline: none;
+}
+.calc-gateInput:focus{
+  border-color: rgba(37,99,235,0.7);
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+}
+.calc-gateError{
+  display: none;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 750;
+}
+.calc-gateActions{ display: flex; justify-content: flex-end; margin-top: 12px; }
+.calc-gateBtn{
+  border: 0;
+  background: var(--bg-darker);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.calc-gateBtn:disabled{ opacity: 0.7; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<!-- Email Gate -->
+<div class="calc-gateOverlay" id="calcEmailGate" role="dialog" aria-modal="true" aria-labelledby="calcGateTitle" aria-describedby="calcGateDesc">
+  <div class="calc-gateBox">
+    <div class="calc-gateTitle" id="calcGateTitle">Enter your email to continue</div>
+    <div class="calc-gateText" id="calcGateDesc">We’ll use this to send your customized report after you finish the setup.</div>
+    <form id="calcGateForm">
+      <div class="calc-gateField">
+        <input class="calc-gateInput" id="calcGateEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@company.com" required />
+        <div class="calc-gateError" id="calcGateError">Please enter a valid email address.</div>
+      </div>
+      <div class="calc-gateActions">
+        <button class="calc-gateBtn" id="calcGateSubmit" type="submit">Continue</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="calc-header">
+  <div class="calc-pill">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M13 2 4 14h7l-1 8 10-14h-7l0-6Z" fill="currentColor"/>
+    </svg>
+    Interactive Tool
+  </div>
+  <h1 class="calc-title">AI Employee ROI Impact Calculator</h1>
+  <p class="calc-subtitle">Quantify your growth potential with a 24/7 AI employee. Based on real-world benchmarks, this interactive calculator reveals the annual revenue lift, time savings, and conversion improvements you can achieve.</p>
+</div>
+
+<!-- Main Calculator -->
+<div id="vaiic" class="calc-shell">
+  <div class="calc-grid">
+
+    <!-- Left: Step Wizard -->
+    <div class="calc-leftCard">
+      <div class="calc-stepRail" id="calcStepRail">
+        <div class="seg active" data-seg="1"></div>
+        <div class="seg" data-seg="2"></div>
+        <div class="seg" data-seg="3"></div>
+        <div class="seg" data-seg="4"></div>
+        <div class="seg" data-seg="5"></div>
+        <div class="seg" data-seg="6"></div>
+      </div>
+      <div class="calc-stepMeta">
+        <span class="calc-stepText" id="calcStepLabel">Step 1 of 6</span>
+      </div>
+      <div class="calc-stepBody" id="calcStepBody"></div>
+      <div class="calc-nav">
+        <button class="calc-linkBtn" id="calcBack" style="visibility:hidden">&larr; Back</button>
+        <button class="calc-primaryBtn" id="calcNext">Next Step &rarr;</button>
+        <span class="calc-doneText hidden" id="calcDone">Analysis Complete</span>
+      </div>
+    </div>
+
+    <!-- Right: Results -->
+    <div class="calc-rightCol">
+
+      <!-- Compare Card -->
+      <div class="calc-compareCard hidden" id="calcCompareCard">
+        <div class="calc-compareTitle">Annual Revenue Comparison</div>
+        <div class="calc-barRow">
+          <span class="calc-barLbl">Current</span>
+          <div class="calc-barTrack"><div class="calc-barFill" id="barCurrent" style="width:0%"></div></div>
+          <span class="calc-barVal" id="valCurrent">$0</span>
+        </div>
+        <div class="calc-barRow">
+          <span class="calc-barLbl">With AI</span>
+          <div class="calc-barTrack"><div class="calc-barFill calc-barFillGreen" id="barAI" style="width:0%"></div></div>
+          <span class="calc-barVal" id="valAI">$0</span>
+        </div>
+      </div>
+
+      <!-- Breakdown -->
+      <div class="calc-subCard hidden" id="calcBreakdown">
+        <div class="calc-subTitle">Value Breakdown</div>
+        <div class="calc-breakRow">
+          <div class="calc-icSquare">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 14.5c-1.7 4-6.5 5.8-10.5 4-4.1-1.8-5.9-6.5-4.1-10.6C7.6 5 10 3.3 12.6 3.1c.5 0 .7.6.3.9-2.6 2-3.5 5.7-1.9 8.7 1.6 3 5.1 4.3 8.2 3.3.5-.1.9.3.8.5Z" fill="#6d28d9"/></svg>
+          </div>
+          <div>
+            <div class="calc-breakTitle">After-Hours Capture</div>
+            <div class="calc-breakDesc">Converting missed nights &amp; weekends</div>
+          </div>
+          <div class="calc-breakVal" id="calcAfterHoursVal">$0</div>
+        </div>
+        <div class="calc-breakRow">
+          <div class="calc-icSquare">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h7l-1 8 10-14h-7l0-6Z" fill="#b45309"/></svg>
+          </div>
+          <div>
+            <div class="calc-breakTitle">Speed-to-Lead Lift</div>
+            <div class="calc-breakDesc">Impact of instant response timing</div>
+          </div>
+          <div class="calc-breakVal" id="calcSpeedLiftVal">$0</div>
+        </div>
+      </div>
+
+      <!-- Insights -->
+      <div class="calc-subCard calc-subCardInfo hidden" id="calcInsights">
+        <div class="calc-subTitle">Key Insights</div>
+        <div class="calc-insightRow">
+          <div class="calc-icInfo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="#2563eb"/></svg>
+          </div>
+          <div class="calc-insightText" id="calcInsightText"></div>
+        </div>
+      </div>
+
+      <!-- Lift Card -->
+      <div class="calc-liftCard">
+        <div class="calc-liftKicker">Projected Annual Lift</div>
+        <div class="calc-liftLine">
+          <span class="calc-liftAmount calc-liftLocked" id="calcLift">$--,---</span>
+          <span class="calc-gainWrap hidden" id="calcGain">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 16l6-6 4 4 6-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 7h4v4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Potential Gain
+          </span>
+        </div>
+        <div class="calc-liftDivider"></div>
+        <div class="calc-liftBottom">
+          <div class="calc-hoursBox">
+            <div class="calc-hoursIcon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <div class="calc-hoursNum" id="calcHours">--</div>
+              <div class="calc-hoursLbl">Hours Saved / Yr</div>
+            </div>
+          </div>
+          <button class="calc-saveBtn" id="calcSaveBtn" disabled>Finish Setup to Save</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="calc-successOverlay" id="calcSuccessModal">
+  <div class="calc-successBox">
+    <div class="calc-successTitle">All set!</div>
+    <div class="calc-successMsg" id="calcSuccessMsg">Check your email for your customized AI Employee report.</div>
+    <button class="calc-successBtn" id="calcSuccessClose">Close</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Constants from original
+  const AFTER_HOURS_CONV_RATE = 0.6;
+  const SPEED_BOOST_FACTOR = 0.75;
+  const HOURS_PER_LEAD_MINUTES = 6;
+
+  const RESPONSE_LABELS = {
+    instant: 'Instant',
+    minutes: 'Minutes',
+    hours: 'Hours',
+    days: 'Days'
+  };
+
+  const RESPONSE_LIFT = {
+    instant: 0.15,
+    minutes: 0.10,
+    hours: 0.05,
+    days: 0
+  };
+
+  // State
+  let state = {
+    step: 1,
+    weeklyContacts: 50,
+    afterHoursPercent: 30,
+    responseTime: 'hours',
+    conversionRate: 13,
+    customerValue: 500
+  };
+
+  // DOM refs
+  const $ = id => document.getElementById(id);
+  const stepRail = $('calcStepRail');
+  const stepLabel = $('calcStepLabel');
+  const stepBody = $('calcStepBody');
+  const btnBack = $('calcBack');
+  const btnNext = $('calcNext');
+  const btnDone = $('calcDone');
+  const elLift = $('calcLift');
+  const elGain = $('calcGain');
+  const elHours = $('calcHours');
+  const btnSave = $('calcSaveBtn');
+  const elCompareCard = $('calcCompareCard');
+  const elBreakdown = $('calcBreakdown');
+  const elInsights = $('calcInsights');
+  const elAfterHoursVal = $('calcAfterHoursVal');
+  const elSpeedLiftVal = $('calcSpeedLiftVal');
+  const elInsightText = $('calcInsightText');
+  const barCurrent = $('barCurrent');
+  const barAI = $('barAI');
+  const valCurrent = $('valCurrent');
+  const valAI = $('valAI');
+  const successModal = $('calcSuccessModal');
+  const successMsg = $('calcSuccessMsg');
+  const successClose = $('calcSuccessClose');
+
+  // Email gate refs
+  const calcShell = $('vaiic');
+  const gateOverlay = $('calcEmailGate');
+  const gateForm = $('calcGateForm');
+  const gateEmail = $('calcGateEmail');
+  const gateError = $('calcGateError');
+  const gateSubmit = $('calcGateSubmit');
+
+  const EMAIL_STORAGE_KEY = 'vaiic_email';
+  const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim());
+
+  function setCalculatorLocked(locked) {
+    if (calcShell) {
+      // inert prevents click + focus/keyboard interaction in modern browsers
+      try { calcShell.inert = !!locked; } catch (e) {}
+      calcShell.setAttribute('aria-hidden', locked ? 'true' : 'false');
+    }
+    // Also disable obvious controls
+    if (btnBack) btnBack.disabled = !!locked;
+    if (btnNext) btnNext.disabled = !!locked;
+    if (btnSave) btnSave.disabled = !!locked;
+  }
+
+  function openGate() {
+    if (!gateOverlay) return;
+    gateOverlay.style.display = 'flex';
+    setCalculatorLocked(true);
+    setTimeout(() => { if (gateEmail) gateEmail.focus(); }, 50);
+  }
+
+  function closeGate() {
+    if (!gateOverlay) return;
+    gateOverlay.style.display = 'none';
+    setCalculatorLocked(false);
+  }
+
+  // Format helpers
+  const fmtCurrency = v => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
+  const fmtNumber = v => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(v);
+
+  // Core calculation (exact same formula as Vendasta)
+  function calculate() {
+    const annualLeads = state.weeklyContacts * 52;
+    const baseConvRate = Math.max(0.01, Math.min(state.conversionRate / 100, 0.5));
+    const currentLift = RESPONSE_LIFT[state.responseTime] || 0;
+    const aiLift = 0.15; // AI provides instant response = 0.15
+    const liftDiff = aiLift - currentLift;
+    const newConvRate = Math.min(baseConvRate + liftDiff, 1);
+
+    const revenueResponseLift = annualLeads * (newConvRate - baseConvRate) * state.customerValue;
+
+    const afterHoursLeads = annualLeads * (state.afterHoursPercent / 100);
+    const afterHoursCaptured = afterHoursLeads * AFTER_HOURS_CONV_RATE * SPEED_BOOST_FACTOR;
+    const revenueAfterHours = afterHoursCaptured * newConvRate * state.customerValue;
+
+    const annualRevenueImpact = revenueResponseLift + revenueAfterHours;
+    const hoursSaved = annualLeads * HOURS_PER_LEAD_MINUTES / 60;
+    const currentRevenue = annualLeads * baseConvRate * state.customerValue;
+    const withAIRevenue = currentRevenue + annualRevenueImpact;
+
+    return { annualRevenueImpact, revenueAfterHours, revenueResponseLift, hoursSaved, currentRevenue, withAIRevenue };
+  }
+
+  // Email gate init
+  const savedEmail = (() => { try { return localStorage.getItem(EMAIL_STORAGE_KEY) || ''; } catch(e) { return ''; } })();
+  if (!isValidEmail(savedEmail)) {
+    openGate();
+  } else {
+    closeGate();
+  }
+
+  if (gateForm) {
+    gateForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = String(gateEmail?.value || '').trim();
+      const ok = isValidEmail(email);
+      if (gateError) gateError.style.display = ok ? 'none' : 'block';
+      if (!ok) return;
+      try { localStorage.setItem(EMAIL_STORAGE_KEY, email); } catch(e) {}
+      closeGate();
+    });
+  }
+
+  function getInsightText() {
+    const ah = state.afterHoursPercent;
+    const insight1 = ah >= 40
+      ? `The biggest opportunity for you is <b>capturing after-hours traffic</b>. You're potentially missing over <b>${ah}%</b> of leads simply due to timing.`
+      : `You still have meaningful upside from <b>after-hours capture</b>, especially on nights & weekends.`;
+    const annualLeads = state.weeklyContacts * 52;
+    const onePercentValue = annualLeads * 0.01 * state.customerValue;
+    const insight2 = `Even a tiny <b>1% improvement in conversion</b> could add roughly <b>${fmtCurrency(onePercentValue)}</b> annually.`;
+    return insight1 + '<br><br>' + insight2;
+  }
+
+  function updateStepRail() {
+    stepRail.querySelectorAll('.seg').forEach(seg => {
+      const segNum = Number(seg.dataset.seg);
+      seg.classList.toggle('active', segNum <= state.step);
+    });
+  }
+
+  function updateResults() {
+    const r = calculate();
+    elHours.textContent = fmtNumber(r.hoursSaved);
+
+    const complete = state.step >= 6;
+
+    if (!complete) {
+      elLift.classList.add('calc-liftLocked');
+      elLift.textContent = '$--,---';
+      elGain.classList.add('hidden');
+      btnSave.disabled = true;
+      btnSave.textContent = 'Finish Setup to Save';
+      elCompareCard.classList.add('hidden');
+      elBreakdown.classList.add('hidden');
+      elInsights.classList.add('hidden');
+      return;
+    }
+
+    elLift.classList.remove('calc-liftLocked');
+    elLift.textContent = fmtCurrency(r.annualRevenueImpact);
+    elGain.classList.remove('hidden');
+    btnSave.disabled = false;
+    btnSave.textContent = 'Save ROI Report';
+    elCompareCard.classList.remove('hidden');
+
+    const maxVal = Math.max(r.currentRevenue, r.withAIRevenue, 1);
+    barCurrent.style.width = Math.min(100, r.currentRevenue / maxVal * 100) + '%';
+    barAI.style.width = Math.min(100, r.withAIRevenue / maxVal * 100) + '%';
+    valCurrent.textContent = fmtCurrency(r.currentRevenue);
+    valAI.textContent = fmtCurrency(r.withAIRevenue);
+
+    elAfterHoursVal.textContent = fmtCurrency(r.revenueAfterHours);
+    elSpeedLiftVal.textContent = fmtCurrency(r.revenueResponseLift);
+    elInsightText.innerHTML = getInsightText();
+
+    elBreakdown.classList.remove('hidden');
+    elInsights.classList.remove('hidden');
+  }
+
+  function updateNav() {
+    stepLabel.textContent = `Step ${state.step} of 6`;
+    updateStepRail();
+    btnBack.style.visibility = state.step > 1 ? 'visible' : 'hidden';
+
+    if (state.step >= 6) {
+      btnNext.classList.add('hidden');
+      btnDone.classList.remove('hidden');
+    } else {
+      btnNext.classList.remove('hidden');
+      btnDone.classList.add('hidden');
+    }
+  }
+
+  function renderStep() {
+    const s = state.step;
+    let html = '';
+
+    if (s === 1) {
+      html = `
+        <h3 class="calc-sectionTitle">Lead Volume</h3>
+        <p class="calc-sectionDesc">How many potential customers are reaching out to you?</p>
+        <div class="calc-box">
+          <div class="calc-row">
+            <div style="font-weight:950;color:#0b2942">Weekly Inbound Leads</div>
+            <div class="calc-bigVal" id="v_weeklyVal">${state.weeklyContacts}</div>
+          </div>
+          <input class="calc-range" id="v_weekly" type="range" min="5" max="500" step="5" value="${state.weeklyContacts}">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;font-weight:900;margin-top:8px">
+            <span>5</span><span>250</span><span>500+</span>
+          </div>
+        </div>`;
+    } else if (s === 2) {
+      const options = [
+        { val: 10, label: 'Low (~10%)' },
+        { val: 30, label: 'Avg (~30%)' },
+        { val: 50, label: 'High (~50%)' }
+      ];
+      html = `
+        <h3 class="calc-sectionTitle">After-Hours Traffic</h3>
+        <p class="calc-sectionDesc">What percentage of your leads come in during nights and weekends?</p>
+        <div class="calc-box">
+          <div class="calc-row">
+            <div style="font-weight:950;color:#0b2942">Estimated Percentage</div>
+            <div class="calc-bigVal">${state.afterHoursPercent}%</div>
+          </div>
+          <div class="calc-btnGrid" style="margin-top:12px">
+            ${options.map(o => `
+              <button type="button" class="calc-chip ${state.afterHoursPercent === o.val ? 'active' : ''}" data-ah="${o.val}">${o.label}</button>
+            `).join('')}
+          </div>
+        </div>`;
+    } else if (s === 3) {
+      const options = [
+        { val: 'instant', label: 'Response time becomes Instant' },
+        { val: 'minutes', label: 'Response within ~30 minutes' },
+        { val: 'hours', label: 'Response within a few hours' },
+        { val: 'days', label: 'Response next business day' }
+      ];
+      html = `
+        <h3 class="calc-sectionTitle">Response Speed</h3>
+        <p class="calc-sectionDesc">How long do leads currently wait for a reply during business hours?</p>
+        <div class="calc-btnList">
+          ${options.map(o => `
+            <button type="button" class="calc-option ${state.responseTime === o.val ? 'active' : ''}" data-rt="${o.val}">${o.label}</button>
+          `).join('')}
+        </div>`;
+    } else if (s === 4) {
+      html = `
+        <h3 class="calc-sectionTitle">Financials</h3>
+        <p class="calc-sectionDesc">What is your current lead conversion rate?</p>
+        <div class="calc-box">
+          <div class="calc-row">
+            <div style="font-weight:950;color:#0b2942">Conversion Rate</div>
+            <div style="font-weight:950;color:#16a34a;background:#16a34a1a;padding:6px 10px;border-radius:10px">${state.conversionRate}%</div>
+          </div>
+          <input class="calc-range" id="v_conv" type="range" min="1" max="30" step="1" value="${state.conversionRate}">
+        </div>`;
+    } else if (s === 5) {
+      html = `
+        <h3 class="calc-sectionTitle">Customer Value</h3>
+        <p class="calc-sectionDesc">Average revenue from a single new customer?</p>
+        <div class="calc-box">
+          <div style="font-weight:950;color:#0b2942;margin-bottom:8px">Avg. Value per Customer</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="font-size:22px;font-weight:950;color:#94a3b8">$</div>
+            <input id="v_value" class="calc-numInput" type="number" min="0" value="${state.customerValue}">
+          </div>
+        </div>`;
+    } else if (s === 6) {
+      html = `
+        <h3 class="calc-sectionTitle">Visualize the Impact</h3>
+        <p class="calc-sectionDesc">Tap the scenarios below to see how changes affect your bottom line.</p>
+        <div class="calc-scenarioList">
+          <div class="calc-scenarioRow">
+            <div class="calc-sIcon yellow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M13 2 4 14h7l-1 8 10-14h-7l0-6Z" fill="currentColor"/></svg>
+            </div>
+            <div class="calc-sText">Response time becomes <b>Instant</b></div>
+          </div>
+          <div class="calc-scenarioRow">
+            <div class="calc-sIcon purple" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M21 14.5c-1.7 4-6.5 5.8-10.5 4-4.1-1.8-5.9-6.5-4.1-10.6C7.6 5 10 3.3 12.6 3.1c.5 0 .7.6.3.9-2.6 2-3.5 5.7-1.9 8.7 1.6 3 5.1 4.3 8.2 3.3.5-.1.9.3.8.5Z" fill="currentColor"/></svg>
+            </div>
+            <div class="calc-sText">Capture <b>20%</b> more after-hours</div>
+          </div>
+          <div class="calc-scenarioRow">
+            <div class="calc-sIcon green" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M4 16l6-6 4 4 6-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 7h4v4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="calc-sText">Conversion rate improves by <b>5%</b></div>
+          </div>
+        </div>
+        <div class="calc-inputsTitle">YOUR INPUTS</div>
+        <div class="calc-inputsGrid">
+          <div><div class="calc-inputLabel">Weekly Leads</div><div class="calc-inputVal">${state.weeklyContacts}</div></div>
+          <div><div class="calc-inputLabel">After Hours</div><div class="calc-inputVal">${state.afterHoursPercent}%</div></div>
+          <div><div class="calc-inputLabel">Response</div><div class="calc-inputVal">${RESPONSE_LABELS[state.responseTime]}</div></div>
+          <div><div class="calc-inputLabel">Financials</div><div class="calc-inputVal">${state.conversionRate}%</div></div>
+        </div>`;
+    }
+
+    stepBody.innerHTML = html;
+
+    // Bind events for this step
+    if (s === 1) {
+      const range = $('v_weekly');
+      const val = $('v_weeklyVal');
+      range.addEventListener('input', () => {
+        state.weeklyContacts = Number(range.value);
+        val.textContent = String(state.weeklyContacts);
+        updateResults();
+      });
+    }
+    if (s === 2) {
+      stepBody.querySelectorAll('[data-ah]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.afterHoursPercent = Number(btn.dataset.ah);
+          renderStep();
+          updateResults();
+        });
+      });
+    }
+    if (s === 3) {
+      stepBody.querySelectorAll('[data-rt]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.responseTime = btn.dataset.rt;
+          renderStep();
+          updateResults();
+        });
+      });
+    }
+    if (s === 4) {
+      const range = $('v_conv');
+      range.addEventListener('input', () => {
+        state.conversionRate = Number(range.value);
+        renderStep();
+        updateResults();
+      });
+    }
+    if (s === 5) {
+      const input = $('v_value');
+      input.addEventListener('input', () => {
+        state.customerValue = Number(input.value || 0);
+        updateResults();
+      });
+    }
+
+    updateNav();
+  }
+
+  // Nav handlers
+  btnBack.addEventListener('click', () => {
+    state.step = Math.max(1, state.step - 1);
+    renderStep();
+    updateResults();
+  });
+
+  btnNext.addEventListener('click', () => {
+    state.step = Math.min(6, state.step + 1);
+    renderStep();
+    updateResults();
+  });
+
+  // Save button - shows success modal (replace with your own form/lead capture)
+  btnSave.addEventListener('click', () => {
+    const r = calculate();
+    const params = new URLSearchParams({
+      weekly_leads: state.weeklyContacts,
+      after_hours_pct: state.afterHoursPercent,
+      response_time: RESPONSE_LABELS[state.responseTime],
+      conversion_rate: state.conversionRate,
+      customer_value: state.customerValue,
+      projected_annual_lift: Math.round(r.annualRevenueImpact),
+      hours_saved: Math.round(r.hoursSaved),
+      current_revenue: Math.round(r.currentRevenue),
+      revenue_with_ai: Math.round(r.withAIRevenue),
+      after_hours_capture: Math.round(r.revenueAfterHours),
+      speed_to_lead_lift: Math.round(r.revenueResponseLift)
+    });
+
+    // Send data to your endpoint (configure this for your setup)
+    // fetch('https://cerebratech.ai/api/roi-lead', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(Object.fromEntries(params))
+    // });
+
+    // For now, log to console and show success
+    console.log('ROI Calculator submission:', Object.fromEntries(params));
+    successMsg.textContent = 'Your ROI report is ready! Check your results above.';
+    successModal.style.display = 'flex';
+  });
+
+  successClose.addEventListener('click', () => {
+    successModal.style.display = 'none';
+  });
+  successModal.addEventListener('click', e => {
+    if (e.target === successModal) successModal.style.display = 'none';
+  });
+
+  // Init
+  renderStep();
+  updateResults();
+})();
+</script>
+
+</body>
+</html>
